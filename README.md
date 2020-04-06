@@ -1,3 +1,3 @@
 # pixel-canvas
 
-[Try the example: ![pixel-canvas](example/example.png "pixel-canvas")](https://coalpha.github.io/pixel-canvas/example/)
+[Try the example: ![](example/example.png)](https://coalpha.github.io/pixel-canvas/example/)

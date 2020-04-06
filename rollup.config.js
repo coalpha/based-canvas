@@ -3,15 +3,6 @@ import serve from "rollup-plugin-serve";
 import livereload from "rollup-plugin-livereload";
 import { terser } from "rollup-plugin-terser"; // would have used rollup.config.j
 
-let finalPlugin;
-if (process.env.ROLLUP_WATCH) {
-   finalPlugin = livereload({
-      watch: ["dist", "example"],
-   });
-} else {
-   finalPlugin = terser();
-}
-
 const config = {
    input: "src/lib.ts",
    output: {
@@ -21,15 +12,12 @@ const config = {
       sourcemap: true,
    },
    watch: "src/lib.ts",
-   plugins: [
-      typescript(),
-      serve({ port: 8080, contentBase: "." }),
-   ],
+   plugins: [typescript()],
 };
 
 if (process.env.ROLLUP_WATCH) {
-   const myLivereload = livereload({ watch: ["dist", "example"] });
    const myServer = serve({ port: 8080, contentBase: "." });
+   const myLivereload = livereload({ watch: ["dist", "example"] });
    config.plugins.push(
       myServer,
       myLivereload,

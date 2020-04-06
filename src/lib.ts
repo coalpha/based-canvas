@@ -126,6 +126,10 @@ export default class PixelCanvas {
       this.#ctx.fillRect(x|0, y|0, sideLength|0, sideLength|0);
    }
 
+   public strokeSquare(x: number, y: number, sideLength: number) {
+      this.#ctx.strokeRect(x|0, y|0, sideLength|0, sideLength|0);
+   }
+
    public fillSquareColor(x: number, y: number, sideLength: number, color: string) {
       this.#ctx.fillStyle = color;
       this.#ctx.fillRect(x|0, y|0, sideLength|0, sideLength|0);
