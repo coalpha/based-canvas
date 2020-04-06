@@ -11,8 +11,8 @@ body {
 #canvas-container {
    box-sizing: border-box;
    border: 2px solid tan;
-   height: 100px;
-   width: 200px;
+   height: 50%;
+   width: 50%;
    resize: both;
    overflow: hidden;
    max-width: 100%;
