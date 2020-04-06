@@ -40,11 +40,12 @@ function drawText() {
    ctx.ctx.font = "18px Consolas";
    ctx.ctx.fillStyle = "white";
    ctx.ctx.textBaseline = "top";
-   ctx.ctx.fillText("The tan line is the size of the <div>", 100, 200);
-   ctx.ctx.fillText("The purple line is the size of the <canvas>", 100, 230);
+   ctx.ctx.fillText("The purple background is the <div> background", 100, 230);
    ctx.ctx.fillText("Press space to show the integerBlocks", 100, 300);
-   ctx.ctx.fillText("Try zooming the browser to see if the canvas stays crisp", 100, 330);
-   ctx.ctx.fillText(`There are ${ctx.integerBlock.display} display pixels for every ${ctx.integerBlock.css} pixels.`, 100, 400);
+   ctx.ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
+   ctx.ctx.fillText(`There are ${ctx.integerBlock.display} display pixels (dp) for every ${ctx.integerBlock.css} pixels.`, 100, 400);
+   ctx.ctx.fillText(`The container is ${ctx.container.clientWidth}px by ${ctx.container.clientHeight} aka ~${(ctx.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(ctx.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
+   ctx.ctx.fillText(`The context is ${ctx.canvas.width}dp by ${ctx.canvas.height}dp in size`, 100, 460);
 }
 
 /** @param {CanvasRenderingContext2D} ctx */

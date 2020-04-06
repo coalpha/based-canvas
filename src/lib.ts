@@ -63,7 +63,7 @@ export default class PixelCanvas {
 
    private containerResized(entries: ResizeObserverEntry[]) {
       const container = entries[0];
-      const containerSize = container.borderBoxSize;
+      const containerSize = container.contentBoxSize;
       const containerWidth = containerSize.inlineSize;
       const containerHeight = containerSize.blockSize;
 
