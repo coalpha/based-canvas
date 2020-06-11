@@ -1,9 +1,9 @@
-import PixelCanvas from "../dist/lib.js";
+import { BasedCanvas } from "../dist/lib.js";
 
 const canvasContainer = document.getElementById("canvas-container");
-const ctx = new PixelCanvas(canvasContainer);
+const ctx = new BasedCanvas(canvasContainer);
 window.ctx = ctx;
-window.PixelCanvas = PixelCanvas;
+window.PixelCanvas = BasedCanvas;
 
 const rainbow = [
    "#e57373", "#f06292", "#ba68c8", "#9575cd", "#7986cb",
@@ -31,7 +31,7 @@ function drawColoredPixelSquares() {
    const rainbowIter = rainbowIterator();
    while (runningX < width) {
       ctx.ctx.fillStyle = rainbowIter.next().value;
-      ctx.fillSquare(runningX, 0, size);
+      ctx.ctx.fillRect(runningX, 0, size, size);
       runningX += size++;
    }
 }
@@ -43,7 +43,7 @@ function drawText() {
    ctx.ctx.fillText("The purple background is the <div> background", 100, 230);
    ctx.ctx.fillText("Press space to show the integerBlocks", 100, 300);
    ctx.ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
-   ctx.ctx.fillText(`There are ${ctx.integerBlock.display} display pixels (dp) for every ${ctx.integerBlock.css} pixels.`, 100, 400);
+   ctx.ctx.fillText(`There are ${BasedCanvas.fpr.dpx} display pixels (dp) for every ${BasedCanvas.fpr.cpx} css pixels.`, 100, 400);
    ctx.ctx.fillText(`The container is ${ctx.container.clientWidth}px by ${ctx.container.clientHeight} aka ~${(ctx.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(ctx.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
    ctx.ctx.fillText(`The context is ${ctx.canvas.width}dp by ${ctx.canvas.height}dp in size`, 100, 460);
 }
@@ -62,7 +62,7 @@ function drawBlocks() {
 
 let doDrawBlocks = false;
 
-function redraw() {
+function paint() {
    drawColoredPixelSquares();
    drawText();
    if (doDrawBlocks) {
@@ -74,8 +74,8 @@ window.addEventListener("keypress", e => {
    if (e.keyCode === 32) {
       doDrawBlocks ^= 1;
       ctx.ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      redraw();
+      paint();
    }
 });
 
-ctx.redraw = redraw;
+ctx.paint = paint;

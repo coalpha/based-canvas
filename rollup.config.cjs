@@ -1,7 +1,7 @@
-import typescript from "rollup-plugin-typescript2";
-import serve from "rollup-plugin-serve";
-import livereload from "rollup-plugin-livereload";
-import { terser } from "rollup-plugin-terser"; // would have used rollup.config.j
+const typescript = require("rollup-plugin-typescript2");
+const serve = require("rollup-plugin-serve");
+const livereload = require("rollup-plugin-livereload");
+const { terser } = require("rollup-plugin-terser");
 
 const config = {
    input: "src/lib.ts",
@@ -26,4 +26,4 @@ if (process.env.ROLLUP_WATCH) {
    config.plugins.push(terser());
 }
 
-export default config;
+module.exports = config;

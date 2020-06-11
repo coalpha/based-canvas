@@ -3,7 +3,9 @@
       "start": "rollup -c -w",
       "build": "rollup -c"
    },
-
+   "dependencies": {
+      "browser-zoom-listener": "^1.1.0"
+   },
    "devDependencies": {
       "@coalpha/eslint-config": "^1.0.3",
       "eslint": "^6.8.0",
