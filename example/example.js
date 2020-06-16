@@ -1,8 +1,14 @@
+
 import { BasedCanvas } from "../dist/lib.js";
 
+window.BasedCanvas = BasedCanvas;
 const canvasContainer = document.getElementById("canvas-container");
-const ctx = new BasedCanvas(canvasContainer);
-window.ctx = ctx;
+const bc = new BasedCanvas(canvasContainer);
+/**
+ * @type {CanvasRenderingContext2D}
+ */
+const ctx = bc.ctx;
+window.bc = bc;
 window.PixelCanvas = BasedCanvas;
 
 const rainbow = [
@@ -27,35 +33,35 @@ function* rainbowIterator() {
 function drawColoredPixelSquares() {
    let size = 1;
    let runningX = 0;
-   const { width } = ctx.canvas;
+   const { width } = bc.canvas;
    const rainbowIter = rainbowIterator();
    while (runningX < width) {
-      ctx.ctx.fillStyle = rainbowIter.next().value;
-      ctx.ctx.fillRect(runningX, 0, size, size);
+      ctx.fillStyle = rainbowIter.next().value;
+      ctx.fillRect(runningX, 0, size, size);
       runningX += size++;
    }
 }
 
 function drawText() {
-   ctx.ctx.font = "18px Consolas";
-   ctx.ctx.fillStyle = "white";
-   ctx.ctx.textBaseline = "top";
-   ctx.ctx.fillText("The purple background is the <div> background", 100, 230);
-   ctx.ctx.fillText("Press space to show the integerBlocks", 100, 300);
-   ctx.ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
-   ctx.ctx.fillText(`There are ${BasedCanvas.fpr.dpx} display pixels (dp) for every ${BasedCanvas.fpr.cpx} css pixels.`, 100, 400);
-   ctx.ctx.fillText(`The container is ${ctx.container.clientWidth}px by ${ctx.container.clientHeight} aka ~${(ctx.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(ctx.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
-   ctx.ctx.fillText(`The context is ${ctx.canvas.width}dp by ${ctx.canvas.height}dp in size`, 100, 460);
+   ctx.font = "18px Consolas";
+   ctx.fillStyle = "white";
+   ctx.textBaseline = "top";
+   ctx.fillText("The purple background is the <div> background", 100, 230);
+   ctx.fillText("Press space to show the integerBlocks", 100, 300);
+   ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
+   ctx.fillText(`There are ${BasedCanvas.fpr.dpx} display pixels (dp) for every ${BasedCanvas.fpr.cpx} css pixels.`, 100, 400);
+   ctx.fillText(`The container is ${bc.container.clientWidth}px by ${bc.container.clientHeight} aka ~${(bc.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(bc.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
+   ctx.fillText(`The context is ${bc.canvas.width}dp by ${bc.canvas.height}dp in size`, 100, 460);
 }
 
 /** @param {CanvasRenderingContext2D} ctx */
 function drawBlocks() {
-   const size = ctx.integerBlock.display;
-   ctx.ctx.strokeStyle = "cyan";
-   const { countY, countX } = ctx.integerBlockCount;
-   for (let y = 0; y < countY; y++) {
-      for (let x = 0; x < countX; x++) {
-         ctx.strokeSquare(x * size, y * size, size);
+   const size = BasedCanvas.fpr.dpx;
+   ctx.strokeStyle = "cyan";
+   const { fprCountX, fprCountY } = bc;
+   for (let y = 0; y < fprCountY; y++) {
+      for (let x = 0; x < fprCountX; x++) {
+         ctx.strokeRect(x * size, y * size, size, size);
       }
    }
 }
@@ -73,9 +79,9 @@ function paint() {
 window.addEventListener("keypress", e => {
    if (e.keyCode === 32) {
       doDrawBlocks ^= 1;
-      ctx.ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.clearRect(0, 0, bc.canvas.width, bc.canvas.height);
       paint();
    }
 });
 
-ctx.paint = paint;
+bc.canvasResized = paint;

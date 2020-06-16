@@ -1,0 +1,28 @@
+digraph lib {
+   "[zoom]" -> "updateFPR(0)"
+   "[container-resize]" -> "containerResized(1)"
+   "updateFPR(0)" -> "new fpr" -> "::fpr"
+   "containerResized(1)" -> "new container(width, height)" -> "#container(width, height)"
+   subgraph cluster_0 {
+      label="cache"
+      "::fpr"
+      "#container(width, height)"
+   }
+   "new fpr" -> fprCount_zoom
+   "new container(width, height)" -> fprCount_resize
+   "::fpr" -> fprCount_resize [label="read cache"]
+   "#container(width, height)" -> fprCount_zoom [label="read cache"]
+   subgraph cluster_1 {
+      fprCount_zoom [label="fprCount(x, y)"]
+      fprCount_resize [label="fprCount(x, y)"]
+   }
+
+   fprCount_zoom -> "ctx(width, height)" -> "paint(2)"
+   fprCount_resize -> "<canvas>" -> "canvasZoomed(2)"
+
+   subgraph cluster_2 {
+      label="callback"
+      "paint(2)"
+      "canvasZoomed(2)"
+   }
+}

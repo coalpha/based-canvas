@@ -1,5 +1,32 @@
 
 (function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.head.appendChild(r) })(window.document);
+const TOLERANCE = 0.001;
+function isPrettyMuchAnInteger(n) {
+    return Math.abs(n - (n | 0)) < TOLERANCE;
+}
+
+const CSS_PIXELS_LIMIT = 100;
+/**
+ * If you really want you can use this export in a pointer-like way to check
+ * if getFPR returned the default.
+ */
+const defaultFPR = {
+    dpx: 1,
+    cpx: 1
+};
+function getFPR() {
+    const dpr = window.devicePixelRatio;
+    for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
+        if (isPrettyMuchAnInteger(dpr * co)) {
+            return {
+                dpx: Math.round(dpr * co),
+                cpx: co,
+            };
+        }
+    }
+    return defaultFPR;
+}
+
 let lastdpr = window.devicePixelRatio;
 const fns = [];
 function dispatch() {
@@ -14,24 +41,6 @@ function dispatch() {
 window.addEventListener("resize", dispatch);
 function browserZoomListener(fn) {
     fns.push(fn);
-}
-
-const CSS_PIXELS_LIMIT = 100;
-const defaultFPR = {
-    dpx: 1,
-    cpx: 1
-};
-function getFPR() {
-    const dpr = window.devicePixelRatio;
-    for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
-        if (Number.isInteger(dpr * co)) {
-            return {
-                dpx: dpr * co,
-                cpx: co,
-            };
-        }
-    }
-    return defaultFPR;
 }
 
 /// <reference types="./ResizeObserver"/>
@@ -79,69 +88,95 @@ var __classPrivateFieldGet$1 = (undefined && undefined.__classPrivateFieldGet) |
     }
     return privateMap.get(receiver);
 };
-var _fprCountX, _fprCountY, _containerWidth, _containerHeight, _containerResizeObserver, _container, _canvas, _ctx;
+var _containerWidth, _containerHeight, _containerResizeObserver, _container, _canvas, _ctx;
+function noop() { }
 class BasedCanvas {
     constructor(container, alpha = false) {
-        _fprCountX.set(this, void 0);
-        _fprCountY.set(this, void 0);
         _containerWidth.set(this, void 0);
         _containerHeight.set(this, void 0);
         _containerResizeObserver.set(this, void 0);
+        this.canvasZoomed = noop;
         /** You should probably write your own paint function */
-        this.paint = () => { };
+        this.canvasResized = noop;
         _container.set(this, void 0);
         _canvas.set(this, void 0);
         _ctx.set(this, void 0);
         __classPrivateFieldSet$1(this, _container, container);
-        this.registerListeners();
         __classPrivateFieldSet$1(this, _canvas, document.createElement("canvas"));
         const ctx = __classPrivateFieldGet$1(this, _canvas).getContext("2d", { alpha });
         if (ctx == null) {
             throw new Error('HTMLElement.getContext("2d") returned null!');
         }
         __classPrivateFieldSet$1(this, _ctx, ctx); // I love flow analysis
-        container.appendChild(__classPrivateFieldGet$1(this, _canvas));
+        this.registerListeners();
+        this.
+            container.appendChild(__classPrivateFieldGet$1(this, _canvas));
+        container.style.overflow = "hidden";
     }
     static updateFPR() {
+        console.log("updateFPR");
         BasedCanvas.fpr = getFPR();
-        this.fprListeners.forEach(listener => listener());
+        BasedCanvas.fprListeners.forEach(listener => listener());
     }
     setCanvasSize(width, height) {
+        console.group(`setCanvasSize(${width}, ${height})`);
         __classPrivateFieldGet$1(this, _canvas).style.width = `${width}px`;
         __classPrivateFieldGet$1(this, _canvas).style.height = `${height}px`;
+        console.groupEnd();
     }
     setContextSize(width, height) {
+        console.group(`setContextSize(${width}, ${height})`);
         // annoyingly, these get cleared when the HTMLCanvasElement is resized
         // so we can't ctx.save
         // this.#ctx.save();
         __classPrivateFieldGet$1(this, _canvas).width = width;
         __classPrivateFieldGet$1(this, _canvas).height = height;
         // this.#ctx.restore();
-        this.paint();
+        console.groupEnd();
+    }
+    getFPRCount() {
+        const { cpx } = BasedCanvas.fpr;
+        return {
+            x: __classPrivateFieldGet$1(this, _containerWidth) / cpx | 0,
+            y: __classPrivateFieldGet$1(this, _containerHeight) / cpx | 0,
+        };
+    }
+    browserZoomed() {
+        console.group("browserZoomed");
+        const { x: fprCountX, y: fprCountY } = this.getFPRCount();
+        const { cpx } = BasedCanvas.fpr;
+        const cpxx = (fprCountX * cpx);
+        const cpxy = (fprCountY * cpx);
+        this.setCanvasSize(cpxx, cpxy);
+        console.info(`calling this.canvasZoomed(${cpxx}, ${cpxy})`);
+        this.canvasZoomed(cpxx, cpxy);
+        console.groupEnd();
     }
     containerResized(entry) {
-        const containerSize = entry.contentRect; // this'll be deprecated later
-        __classPrivateFieldSet$1(// this'll be deprecated later
-        this, _containerWidth, containerSize.width);
+        console.group("containerResized");
+        // save the state
+        const containerSize = entry.contentRect;
+        console.log(`${containerSize.width}, ${containerSize.height}`);
+        __classPrivateFieldSet$1(this, _containerWidth, containerSize.width);
         __classPrivateFieldSet$1(this, _containerHeight, containerSize.height);
-        this.prepaint();
-    }
-    prepaint() {
-        const { dpx, cpx } = BasedCanvas.fpr;
-        const fprCountX = __classPrivateFieldSet$1(this, _fprCountX, __classPrivateFieldGet$1(this, _containerWidth) / cpx | 0);
-        const fprCountY = __classPrivateFieldSet$1(this, _fprCountY, __classPrivateFieldGet$1(this, _containerHeight) / cpx | 0);
+        // do the resize
+        const { x: fprCountX, y: fprCountY } = this.getFPRCount();
+        const { cpx, dpx } = BasedCanvas.fpr;
         this.setCanvasSize((fprCountX * cpx), (fprCountY * cpx));
-        this.setContextSize((fprCountX * dpx), (fprCountY * dpx));
+        const rpxx = (fprCountX * dpx);
+        const rpxy = (fprCountY * dpx);
+        this.setContextSize(rpxx, rpxy);
+        console.info(`calling this.canvasResized(${rpxx}, ${rpxy})`);
+        this.canvasResized(rpxx, rpxy);
+        console.groupEnd();
     }
     registerListeners() {
-        BasedCanvas.fprListeners.push(this.prepaint.bind(this));
+        BasedCanvas.fprListeners.push(this.browserZoomed.bind(this));
         __classPrivateFieldSet$1(this, _containerResizeObserver, (new SimpleResizeObserver(__classPrivateFieldGet$1(this, _container), this.containerResized.bind(this))));
     }
     get container() { return __classPrivateFieldGet$1(this, _container); }
     get canvas() { return __classPrivateFieldGet$1(this, _canvas); }
     get ctx() { return __classPrivateFieldGet$1(this, _ctx); }
-    get fprCountX() { return __classPrivateFieldGet$1(this, _fprCountX) | 0; }
-    get fprCountY() { return __classPrivateFieldGet$1(this, _fprCountY) | 0; }
     get width() {
         return __classPrivateFieldGet$1(this, _canvas).width;
     }
@@ -149,10 +184,14 @@ class BasedCanvas {
         return __classPrivateFieldGet$1(this, _canvas).height;
     }
 }
-_fprCountX = new WeakMap(), _fprCountY = new WeakMap(), _containerWidth = new WeakMap(), _containerHeight = new WeakMap(), _containerResizeObserver = new WeakMap(), _container = new WeakMap(), _canvas = new WeakMap(), _ctx = new WeakMap();
+_containerWidth = new WeakMap(), _containerHeight = new WeakMap(), _containerResizeObserver = new WeakMap(), _container = new WeakMap(), _canvas = new WeakMap(), _ctx = new WeakMap();
+/**
+ * This object is not mutated.
+ * Copying it into another variable will leave you with old data
+ */
 BasedCanvas.fpr = getFPR();
 BasedCanvas.fprListeners = [];
 browserZoomListener(BasedCanvas.updateFPR);
 
-export { BasedCanvas, browserZoomListener };
+export { BasedCanvas };
 //# sourceMappingURL=lib.js.map
