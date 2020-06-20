@@ -1,39 +1,81 @@
 import { CSSPixels, RasterUnits } from "./units";
 import { currentFPR, listen } from "./fpr";
 
-import { BasedCanvas, BasedCanvasEventMap } from "./BasedCanvas";
+import { BasedCanvas, EventMap as EventMap, EventKey, EventFns, EventFnParams } from "./BasedCanvas";
 
-import browserZoomListener from "../vendor/SingleBrowserZoomListener";
 import SimpleResizeObserver from "../vendor/SimpleResizeObserver";
-
-function noop() {}
 
 type FPRCount = { x: number, y: number };
 
 type Listeners = {
-   [k in keyof BasedCanvasEventMap]: BasedCanvasEventMap[k][];
+   [k in keyof EventMap]: Set<EventMap[k]>;
 }
 
 export default class BasedCanvasImpl implements BasedCanvas {
-   #canvasWidth: CSSPixels;
-   #canvasHeight: CSSPixels;
+   readonly #ctx: CanvasRenderingContext2D;
+   #ctxWidth!: RasterUnits;
+   #ctxHeight!: RasterUnits;
+
+   readonly #canvas: HTMLCanvasElement;
+   #canvasWidth!: CSSPixels;
+   #canvasHeight!: CSSPixels;
+
+   readonly #container: HTMLElement;
+   #containerWidth!: CSSPixels;
+   #containerHeight!: CSSPixels;
+
+   constructor (container: HTMLElement, alpha = false) {
+      container: {
+         this.#container = container;
+         container.style.overflow = "hidden";
+         this.#containerResizeObserver = (
+            new SimpleResizeObserver(this.#container, this.containerResized.bind(this))
+         );
+      }
+
+      canvas: {
+         this.#canvas = document.createElement("canvas");
+         const ctx = this.#canvas.getContext("2d", { alpha });
+         if (ctx == null) {
+            throw new Error('HTMLElement.getContext("2d") returned null!');
+         }
+         this.#ctx = ctx;
+         container.appendChild(this.#canvas);
+      }
+      this.updateState();
+   }
+
+   updateState() {
+      this.#ctxWidth = this.#canvas.width as RasterUnits;
+      this.#ctxHeight = this.#canvas.height as RasterUnits;
+
+      const canvasProps = window.getComputedStyle(this.#canvas);
+      this.#canvasWidth = +canvasProps.width.slice(-2) as CSSPixels;
+      this.#canvasHeight = +canvasProps.height.slice(-2) as CSSPixels;
+
+      const containerProps = window.getComputedStyle(this.#container);
+      this.#containerWidth = +containerProps.width.slice(-2) as CSSPixels;
+      this.#containerHeight = +containerProps.height.slice(-2) as CSSPixels;
+   }
+
    private setCanvasSize(width: CSSPixels, height: CSSPixels) {
       console.group(`setCanvasSize(${width}, ${height})`);
-      this.#canvasWidth = width;
-      this.#canvasHeight = height;
-      this.#canvas.style.width = `${width}px`;
-      this.#canvas.style.height = `${height}px`;
+      if (width !== this.#canvasWidth || height !== this.#canvasHeight) {
+         console.log("Actually set it");
+         this.#canvasWidth = width;
+         this.#canvasHeight = height;
+         this.#canvas.style.width = `${width}px`;
+         this.#canvas.style.height = `${height}px`;
+      }
       console.groupEnd();
    }
 
-   #contextWidth: RasterUnits;
-   #contextHeight: RasterUnits;
    private setContextSize(width: RasterUnits, height: RasterUnits) {
       console.group(`setContextSize(${width}, ${height})`);
-      if (width !== this.#contextWidth || height !== this.#contextHeight) {
+      if (width !== this.#ctxWidth || height !== this.#ctxHeight) {
          console.log("Actually set it");
-         this.#canvas.width = this.#contextWidth = width;
-         this.#canvas.height = this.#contextHeight = height;
+         this.#canvas.width = this.#ctxWidth = width;
+         this.#canvas.height = this.#ctxHeight = height;
       }
       console.groupEnd();
    }
@@ -62,12 +104,6 @@ export default class BasedCanvasImpl implements BasedCanvas {
       console.groupEnd();
    }
 
-   recalc() {
-      
-   }
-
-   #containerWidth!: CSSPixels;
-   #containerHeight!: CSSPixels;
    private containerResized(entry: ResizeObserverEntry) {
       console.group("containerResized");
       // save the state
@@ -97,52 +133,46 @@ export default class BasedCanvasImpl implements BasedCanvas {
       console.groupEnd();
    }
 
-   #containerResizeObserver!: SimpleResizeObserver;
-   private registerListeners() {
-      this.#containerResizeObserver = (
-         new SimpleResizeObserver(this.#container, this.containerResized.bind(this))
-      );
-   }
+   readonly #containerResizeObserver: SimpleResizeObserver;
 
    #listeners: Listeners = {
-      contextResize: [],
-      canvasResize: [],
+      contextResize: new Set,
+      canvasResize: new Set,
    };
-   
-   addEventListener<K extends keyof BasedCanvasEventMap>(e: K, listener: BasedCanvasEventMap[K]): void {
-      if (e === "paint") {
-         this.#paintListeners.push(listener as BasedCanvasEventMap["paint"]);
-      } else if (e === "zoom") {
-         this.#zoomListeners.push(listener as BasedCanvasEventMap["zoom"]);
+
+   #eventNames = Object.keys(this.#listeners);
+
+   addEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): void {
+      if (this.#eventNames.includes(k)) {
+         // I really tried to get this to work cleanly without the `any`.
+         // I blame the type system
+         this.#listeners[k].add(listener as any);
       } else {
-         throw new Error(`BasedCanvasImpl#addEventListener: "${e}" is not a valid event!`);
+         throw new Error(`BasedCanvasImpl#addEventListener: "${k}" is not a valid event!`);
       }
    }
 
-   readonly #container: HTMLElement;
-   readonly #canvas: HTMLCanvasElement;
-   readonly #ctx: CanvasRenderingContext2D;
-
-   constructor (container: HTMLElement, alpha = false) {
-      this.#container = container;
-      this.#canvas = document.createElement("canvas");
-      const ctx = this.#canvas.getContext("2d", { alpha });
-      if (ctx == null) {
-         throw new Error('HTMLElement.getContext("2d") returned null!');
+   dispatchEvent<K extends EventKey>(k: K, ...args: Parameters<EventMap[K]>): void {
+      if (this.#eventNames.includes(k)) {
+         this.#listeners[k].forEach((fn: any) => fn(...args));
+      } else {
+         throw new Error(`BasedCanvasImpl#dispatchEvent: "${k}" is not a valid event!`);
       }
-      this.#ctx = ctx;
-      this.registerListeners();
-      container.appendChild(this.#canvas);
-      container.style.overflow = "hidden";
+   }
+   /**
+    * @returns `true` if the function was actually removed
+    */
+   removeEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): boolean {
+      if (this.#eventNames.includes(k)) {
+         return this.#listeners[k].delete(listener as any);
+      }
+      return false;
    }
 
-   get container() { return this.#container }
-   get canvas() { return this.#canvas }
+   // getters
    get ctx() { return this.#ctx }
-   get contextWidth(): RasterUnits {
-      return this.#canvas.width as RasterUnits;
-   }
-   get contextHeight(): RasterUnits {
-      return this.#canvas.height as RasterUnits;
-   }
+   get canvas() { return this.#canvas }
+   get container() { return this.#container }
+   get contextWidth() { return this.#canvas.width as RasterUnits }
+   get contextHeight() { return this.#canvas.height as RasterUnits }
 }

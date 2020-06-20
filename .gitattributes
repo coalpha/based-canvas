@@ -1,2 +1,2 @@
-/dist/* linguist-generated
 *.d.ts linguist-language=TypeScript linguist-vendored=false
+/dist/* linguist-generated=true
