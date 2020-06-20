@@ -1,7 +1,7 @@
 import { CSSPixels, RasterUnits } from "./units";
-import { currentFPR, listen } from "./fpr";
+import * as FPR from "./fpr";
 
-import { BasedCanvas, EventMap as EventMap, EventKey, EventFns, EventFnParams } from "./BasedCanvas";
+import { BasedCanvas, EventMap as EventMap, EventKey y } from "./BasedCanvas";
 
 import SimpleResizeObserver from "../vendor/SimpleResizeObserver";
 
@@ -24,13 +24,11 @@ export default class BasedCanvasImpl implements BasedCanvas {
    #containerWidth!: CSSPixels;
    #containerHeight!: CSSPixels;
 
+   readonly #containerResizeObserver: SimpleResizeObserver;
    constructor (container: HTMLElement, alpha = false) {
       container: {
          this.#container = container;
          container.style.overflow = "hidden";
-         this.#containerResizeObserver = (
-            new SimpleResizeObserver(this.#container, this.containerResized.bind(this))
-         );
       }
 
       canvas: {
@@ -42,10 +40,19 @@ export default class BasedCanvasImpl implements BasedCanvas {
          this.#ctx = ctx;
          container.appendChild(this.#canvas);
       }
+      listeners: {
+         this.#containerResizeObserver = (
+            new SimpleResizeObserver(this.#container, this.containerResized.bind(this))
+         );
+
+         FPR.addChangeListener(() => {
+            
+         });
+      }
       this.updateState();
    }
 
-   updateState() {
+   private updateState() {
       this.#ctxWidth = this.#canvas.width as RasterUnits;
       this.#ctxHeight = this.#canvas.height as RasterUnits;
 
@@ -81,7 +88,7 @@ export default class BasedCanvasImpl implements BasedCanvas {
    }
 
    private getFPRCount(): FPRCount {
-      const { cpx } = currentFPR;
+      const { cpx } = current;
       return {
          x: this.#containerWidth / cpx | 0,
          y: this.#containerHeight / cpx | 0,
@@ -114,7 +121,7 @@ export default class BasedCanvasImpl implements BasedCanvas {
 
       // do the resize
       const { x: fprCountX, y: fprCountY } = this.getFPRCount();
-      const { cpx, dpx } = currentFPR;
+      const { cpx, dpx } = current;
 
       this.setCanvasSize(
          (fprCountX * cpx) as CSSPixels,
@@ -132,8 +139,6 @@ export default class BasedCanvasImpl implements BasedCanvas {
       this.canvasResized(rpxx, rpxy);
       console.groupEnd();
    }
-
-   readonly #containerResizeObserver: SimpleResizeObserver;
 
    #listeners: Listeners = {
       contextResize: new Set,
@@ -159,9 +164,8 @@ export default class BasedCanvasImpl implements BasedCanvas {
          throw new Error(`BasedCanvasImpl#dispatchEvent: "${k}" is not a valid event!`);
       }
    }
-   /**
-    * @returns `true` if the function was actually removed
-    */
+
+   /** @returns `true` if the function was actually removed */
    removeEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): boolean {
       if (this.#eventNames.includes(k)) {
          return this.#listeners[k].delete(listener as any);
@@ -171,8 +175,14 @@ export default class BasedCanvasImpl implements BasedCanvas {
 
    // getters
    get ctx() { return this.#ctx }
+   get ctxWidth() { return this.#ctxWidth }
+   get ctxHeight() { return this.#ctxHeight }
+
    get canvas() { return this.#canvas }
+   get canvasWidth() { return this.#canvasWidth }
+   get canvasHeight() { return this.#canvasHeight }
+
    get container() { return this.#container }
-   get contextWidth() { return this.#canvas.width as RasterUnits }
-   get contextHeight() { return this.#canvas.height as RasterUnits }
+   get containerWidth() { return this.#containerWidth }
+   get containerHeight() { return this.#containerHeight }
 }

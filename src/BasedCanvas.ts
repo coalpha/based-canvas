@@ -14,7 +14,7 @@ export type EventFnParams<K extends EventKey> = Parameters<EventMap[K]>;
 
 export interface BasedCanvas /* extends EventTarget */ {
    addEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): void;
-   dispatchEvent<K extends EventKey>(k: EventKey, ...args: EventFnParams<K>): void;
+   // private dispatchEvent<K extends EventKey>(k: EventKey, ...args: EventFnParams<K>): void;
    /**
     * This is probably O(n) where n is the number of listeners.
     * You probably don't want to call this a bunch
