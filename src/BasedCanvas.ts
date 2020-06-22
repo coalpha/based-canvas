@@ -1,37 +1,22 @@
-import { CSSPixels, RasterUnits } from "./units";
+import Listenable from "./listenable/Listenable";
 
-type PaintFunction = (width: RasterUnits, height: RasterUnits) => void;
-type WindowZoomFunction = (width: CSSPixels, height: CSSPixels) => void;
+import { CSSPixels, RasterUnits } from "./pixels";
 
-export interface EventMap {
-   "contextResize": PaintFunction;
-   "canvasResize": WindowZoomFunction;
+interface Dimension<T extends number> {
+   width: T;
+   height: T;
 }
 
-export type EventKey = keyof EventMap;
-
-export type EventFnParams<K extends EventKey> = Parameters<EventMap[K]>;
-
-export interface BasedCanvas /* extends EventTarget */ {
-   addEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): void;
-   // private dispatchEvent<K extends EventKey>(k: EventKey, ...args: EventFnParams<K>): void;
-   /**
-    * This is probably O(n) where n is the number of listeners.
-    * You probably don't want to call this a bunch
-    */
-   removeEventListener<K extends EventKey>(k: EventKey, listener: EventMap[K]): boolean;
+export interface BasedCanvas {
    recalc(): void;
 
    readonly ctx: CanvasRenderingContext2D;
-   readonly ctxWidth: RasterUnits;
-   readonly ctxHeight: RasterUnits;
+   readonly ctxSize: Listenable<Dimension<RasterUnits>>;
 
    readonly container: HTMLElement;
-   readonly containerWidth: CSSPixels;
-   readonly containerHeight: CSSPixels;
+   readonly containerSize: Listenable<Dimension<CSSPixels>>;
 
    readonly canvas: HTMLCanvasElement;
-   readonly canvasWidth: CSSPixels;
-   readonly canvasHeight: CSSPixels;
+   readonly canvasSize: Listenable<Dimension<CSSPixels>>;
 }
 

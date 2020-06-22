@@ -1,4 +1,4 @@
-import { CSSPixels, DisplayPixels } from "./units";
+import { CSSPixels, DisplayPixels } from "./pixels";
 import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
 import onZoom from "../vendor/SingleBrowserZoomListener";
 

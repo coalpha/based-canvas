@@ -1,4 +1,4 @@
-import { CSSPixels, RasterUnits } from "./units";
+import { CSSPixels, RasterUnits } from "./pixels";
 import * as FPR from "./fpr";
 
 import { BasedCanvas, EventMap as EventMap, EventKey y } from "./BasedCanvas";

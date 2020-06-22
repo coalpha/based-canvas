@@ -1,0 +1,12 @@
+digraph {
+   rankdir="LR"
+   this [
+      shape="record"
+      label="isPrettyMuchAnInteger(input): boolean|+ input : number\l"
+   ]
+
+   test [label="within 0.001 of an integer?"]
+   input -> test
+   test -> true [label=yes]
+   test -> false [label=no]
+}

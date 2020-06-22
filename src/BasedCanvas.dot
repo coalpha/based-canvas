@@ -1,11 +1,7 @@
 digraph lib {
    // rankdir=LR
-   newrank="true"
    subgraph cluster_IBasedCanvas {
       label="IBasedCanvas"
-      i_ael
-      i_rel
-      i_rec
       subgraph cluster_state {
          label="state"
          ctx
