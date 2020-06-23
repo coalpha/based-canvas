@@ -1,12 +1,8 @@
-import { CSSPixels, DisplayPixels } from "./pixels";
+import Listenable from "./Listenable";
+import DPRListener from "./DPR";
 import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
-import onZoom from "../vendor/SingleBrowserZoomListener";
+import { CSSPixels, DisplayPixels } from "./pixels";
 
-/**
- * this module turns the pure SingleBrowserZoomLisener into a stateful thing
- */
-
-/** A representation of the `devicePixelRatio` as a fraction: dpx/cpx. */
 type FPR = {
    readonly dpx: DisplayPixels,
    readonly cpx: CSSPixels,
@@ -19,32 +15,36 @@ const defaultFPR: FPR = {
    cpx: 1 as CSSPixels,
 };
 
-export let current: FPR = defaultFPR;
+var currentFPR: FPR;
 
-function updateFPR(dpr = window.devicePixelRatio): void {
-   for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
-      if (isPrettyMuchAnInteger(dpr * co)) {
-         current = {
-            dpx: Math.round(dpr * co) as DisplayPixels,
-            cpx: co as CSSPixels,
-         };
-         return;
+const FPRListener = new class FPRListener extends Listenable<FPR> {
+   constructor () {
+      super();
+      DPRListener.addChangeListener(super.external.bind(this));
+      this.fetch();
+   };
+
+   fetch() {
+      const dpr = DPRListener.value;
+      for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
+         if (isPrettyMuchAnInteger(dpr * co)) {
+            currentFPR = {
+               dpx: Math.round(dpr * co) as DisplayPixels,
+               cpx: co as CSSPixels,
+            };
+            return;
+         }
       }
-   }
-   current = defaultFPR;
+      currentFPR = defaultFPR;
+   };
+
+   /**
+    * @name FractionalPixelRatio
+    * @name FPR
+    * @see dpx / cpx
+    * @see dppx / cppx
+    */
+   get value() { return currentFPR };
 }
 
-type Runnable = () => void;
-
-const changeListeners: Runnable[] = [];
-
-export function addChangeListener(fn: Runnable) {
-   changeListeners.push(fn);
-}
-
-onZoom(dppx => {
-   updateFPR(dppx);
-   changeListeners.forEach(fn => fn());
-});
-
-updateFPR();
+export default FPRListener;

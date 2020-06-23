@@ -1,20 +1,14 @@
+import BasedCanvas from "./BasedCanvas";
 import { CSSPixels, RasterUnits } from "./pixels";
-import * as FPR from "./fpr";
-
-import { BasedCanvas, EventMap as EventMap, EventKey y } from "./BasedCanvas";
-
-import SimpleResizeObserver from "../vendor/SimpleResizeObserver";
-
-type FPRCount = { x: number, y: number };
-
-type Listeners = {
-   [k in keyof EventMap]: Set<EventMap[k]>;
-}
+import Dimension from "./Dimension";
+import Listenable from "./Listenable";
 
 export default class BasedCanvasImpl implements BasedCanvas {
    readonly #ctx: CanvasRenderingContext2D;
    #ctxWidth!: RasterUnits;
    #ctxHeight!: RasterUnits;
+
+   readonly ctxSize: Listenable<Dimension<RasterUnits>>;
 
    readonly #canvas: HTMLCanvasElement;
    #canvasWidth!: CSSPixels;
@@ -24,7 +18,6 @@ export default class BasedCanvasImpl implements BasedCanvas {
    #containerWidth!: CSSPixels;
    #containerHeight!: CSSPixels;
 
-   readonly #containerResizeObserver: SimpleResizeObserver;
    constructor (container: HTMLElement, alpha = false) {
       container: {
          this.#container = container;
@@ -40,16 +33,28 @@ export default class BasedCanvasImpl implements BasedCanvas {
          this.#ctx = ctx;
          container.appendChild(this.#canvas);
       }
-      listeners: {
-         this.#containerResizeObserver = (
-            new SimpleResizeObserver(this.#container, this.containerResized.bind(this))
-         );
+      listenables: {
+         const bc = this;
+         this.ctxSize = new class extends Listenable<Dimension<RasterUnits>> {
+            constructor () {
+               super();
+               this.fetch();
+            }
+            fetch() {
+               bc.#ctxWidth = bc.#canvas.width as RasterUnits;
+               bc.#ctxHeight = bc.#canvas.height as RasterUnits;
+            }
+   
+            get value() {
+               return {
+                  width: bc.#ctxWidth,
+                  height: bc.#ctxHeight,
+               };
+            }
+         };
 
-         FPR.addChangeListener(() => {
-            
-         });
+         
       }
-      this.updateState();
    }
 
    private updateState() {

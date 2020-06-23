@@ -2,12 +2,9 @@ import Listenable from "./listenable/Listenable";
 
 import { CSSPixels, RasterUnits } from "./pixels";
 
-interface Dimension<T extends number> {
-   width: T;
-   height: T;
-}
+import Dimension from "./Dimension";
 
-export interface BasedCanvas {
+export default interface BasedCanvas {
    recalc(): void;
 
    readonly ctx: CanvasRenderingContext2D;

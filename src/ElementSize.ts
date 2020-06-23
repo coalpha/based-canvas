@@ -1,8 +1,8 @@
-/// <reference types="../ResizeObserver"/>
+/// <reference types="./ResizeObserver"/>
 
 import Listenable from "./Listenable";
 
-import { CSSPixels } from "../pixels";
+import { CSSPixels } from "./pixels";
 
 interface Dimensions {
    width: CSSPixels;
@@ -30,12 +30,14 @@ export default class ElementSizeListenable extends Listenable<Dimensions> {
       };
    }
 
-   external([entry]: ResizeObserverEntry[]) {
-      const { width, height } = entry.contentRect;
-      this.#currentSize = {
-         width: width as CSSPixels,
-         height: height as CSSPixels,
-      };
+   external([{ contentRect: { width, height }}]: ResizeObserverEntry[]) {
+      if (this.#currentSize.width !== width || this.#currentSize.height !== height) {
+         this.#currentSize = {
+            width: width as CSSPixels,
+            height: height as CSSPixels,
+         };
+         super.callListeners();
+      }
    }
 
    get value() { return this.#currentSize };

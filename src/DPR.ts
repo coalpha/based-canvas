@@ -6,7 +6,7 @@ const DPRListener = new class DPRListener extends Listenable<typeof dpr> {
    constructor () {
       super();
       window.addEventListener("resize", this.external.bind(this));
-   }
+   };
 
    protected external() {
       const newDPR = window.devicePixelRatio;
@@ -14,7 +14,7 @@ const DPRListener = new class DPRListener extends Listenable<typeof dpr> {
          dpr = newDPR;
          super.callListeners();
       }
-   }
+   };
 
    fetch() { dpr = window.devicePixelRatio };
 
