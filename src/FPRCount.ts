@@ -1,6 +1,5 @@
-import Listenable from "./Listenable";
-
-import FPRListenable from "./FPR";
+import { Listenable } from "./Listenable";
+import { FPR, FPRListenable } from "./FPR";
 import ElementSizeListenable from "./ElementSize";
 
 interface FPRCount {
@@ -8,16 +7,21 @@ interface FPRCount {
    y: number;
 }
 
-export default class FPRCountListenable extends Listenable<FPRCount> {
+export default class FPRCountListenable implements Listenable<FPRCount> {
    #elementSize: ElementSizeListenable;
    #currentCount!: FPRCount;
 
    constructor (el: Element) {
-      super();
       this.#elementSize = new ElementSizeListenable(el);
-      this.#elementSize.addChangeListener(super.external.bind(this));
-      FPRListenable.addChangeListener(super.external.bind(this))
+      this.#elementSize.addChangeListener(this.external.bind(this));
+      FPRListenable.addChangeListener(this.external.bind(this))
    };
+
+   external() {
+      
+   }
+
+   addChangeListener()
 
    fetch() {
       const cpx = FPRListenable.value.cpx;
@@ -28,7 +32,7 @@ export default class FPRCountListenable extends Listenable<FPRCount> {
       };
 
       if (newFPRCount.x !== this.#currentCount.x || newFPRCount.y !== this.#currentCount.y) {
-         super.callListeners();
+         
       }
    };
 

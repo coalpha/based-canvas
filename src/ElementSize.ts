@@ -1,21 +1,16 @@
 /// <reference types="./ResizeObserver"/>
-
-import Listenable from "./Listenable";
-
+import { ChangeListener, Listenable, make } from "./Listenable";
 import { CSSPixels } from "./pixels";
+import Dimension from "./Dimension";
 
-interface Dimensions {
-   width: CSSPixels;
-   height: CSSPixels;
-};
+type CSSDimensions = Dimension<CSSPixels>;
 
-export default class ElementSizeListenable extends Listenable<Dimensions> {
+export default class ElementSizeListenable implements Listenable<CSSDimensions> {
    #el: Element;
    #observer: ResizeObserver;
-   #currentSize!: Dimensions;
+   #currentSize!: CSSDimensions;
 
    constructor (el: Element) {
-      super();
       this.#el = el;
       this.#observer = new ResizeObserver(this.external.bind(this));
       this.#observer.observe(el);
@@ -36,9 +31,15 @@ export default class ElementSizeListenable extends Listenable<Dimensions> {
             width: width as CSSPixels,
             height: height as CSSPixels,
          };
-         super.callListeners();
+         this.#listeners.forEach(listener => listener(this.#currentSize));
       }
    }
 
    get value() { return this.#currentSize };
+
+   #listeners: ChangeListener<CSSDimensions>[] = [];
+
+   addChangeListener(listener: ChangeListener<CSSDimensions>) {
+      this.#listeners.push(listener);
+   }
 }

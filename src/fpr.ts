@@ -1,60 +1,33 @@
-import { make, Listenable } from "./Listenable";
+import Eq from "./Eq";
 import DPRListener from "./DPR";
-import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
+import { map, Listenable } from "./Listenable";
 import { CSSPixels, DisplayPixels } from "./pixels";
+import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
 
-type FPR = {
+export interface FPR {
    readonly dpx: DisplayPixels,
    readonly cpx: CSSPixels,
 };
 
-const CSS_PIXELS_LIMIT = 100;
-
-const defaultFPR: FPR = {
+export const defaultFPR: FPR = {
    dpx: 1 as DisplayPixels,
    cpx: 1 as CSSPixels,
 };
 
-var currentFPR: FPR;
+const CSS_PIXELS_LIMIT = 100;
 
-const FPRListener = make<FPR>(
-   changed => {
-   
-   },
-   () => {
-      
-   },
-   
-);
-
-new class FPRListener extends Listenable<FPR> {
-   constructor () {
-      super();
-      DPRListener.addChangeListener(super.external.bind(this));
-      this.fetch();
-   };
-
-   fetch() {
-      const dpr = DPRListener.value;
-      for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
-         if (isPrettyMuchAnInteger(dpr * co)) {
-            currentFPR = {
-               dpx: Math.round(dpr * co) as DisplayPixels,
-               cpx: co as CSSPixels,
-            };
-            return;
-         }
+function dpr2fpr(dpr: number) {
+   for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
+      if (isPrettyMuchAnInteger(dpr * co)) {
+         return ({
+            dpx: Math.round(dpr * co) as DisplayPixels,
+            cpx: co as CSSPixels,
+         });
       }
-      currentFPR = defaultFPR;
-   };
-
-   /**
-    * @name FractionalPixelRatio
-    * @name FPR
-    * @see dpx / cpx
-    * @see dppx / cppx
-    */
-   get value() { return currentFPR };
+   }
+   return defaultFPR;
 }
 
-export default FPRListener;
+const eq: Eq<FPR> = (a, b) => a.dpx === b.dpx && a.cpx === b.cpx;
+
+export const FPRListenable: Listenable<FPR> = map(DPRListener, dpr2fpr, eq);

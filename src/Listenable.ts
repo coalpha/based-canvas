@@ -1,7 +1,7 @@
-/**
- * A listener that accepts an optional argument
- */
-type ChangeListener<T> = (value: T) => void;
+import Eq from "./Eq";
+
+/** A listener that accepts an optional argument */
+export type ChangeListener<T> = (value: T) => void;
 
 export interface Listenable<T> {
    value: T;
@@ -32,12 +32,11 @@ type Executor<T> = (external: External, externalV: ExternalV<T>) => void;
 
 type Fetch<T> = () => T;
 
-/**
- * Equality test between two type `T`s
- */
-type Eq<T> = (a: T, b: T) => boolean;
+function defaultEq(a: any, b: any) {
+   return a === b;
+}
 
-export function make<T>(executor: Executor<T>, fetch: Fetch<T>, eq: Eq<T> = () => false): Listenable<T> {
+export function make<T>(executor: Executor<T>, fetch: Fetch<T>, eq: Eq<T> = defaultEq): Listenable<T> {
    const listeners: ChangeListener<T>[] = [];
 
    const obj: Listenable<T> = {
@@ -60,7 +59,7 @@ export function make<T>(executor: Executor<T>, fetch: Fetch<T>, eq: Eq<T> = () =
    return obj;
 }
 
-export function map<T, U>(from: Listenable<T>, fn: (value: T) => U, eq: Eq<U> = () => false): Listenable<U> {
+export function map<T, U>(from: Listenable<T>, fn: (value: T) => U, eq: Eq<U> = defaultEq): Listenable<U> {
    const listeners: ChangeListener<U>[] = [];
 
    const to: Listenable<U> = {
