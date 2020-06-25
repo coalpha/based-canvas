@@ -1,4 +1,4 @@
-import Listenable from "./Listenable";
+import { make, Listenable } from "./Listenable";
 import DPRListener from "./DPR";
 import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
 import { CSSPixels, DisplayPixels } from "./pixels";
@@ -17,7 +17,17 @@ const defaultFPR: FPR = {
 
 var currentFPR: FPR;
 
-const FPRListener = new class FPRListener extends Listenable<FPR> {
+const FPRListener = make<FPR>(
+   changed => {
+   
+   },
+   () => {
+      
+   },
+   
+);
+
+new class FPRListener extends Listenable<FPR> {
    constructor () {
       super();
       DPRListener.addChangeListener(super.external.bind(this));

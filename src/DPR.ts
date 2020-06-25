@@ -1,8 +1,12 @@
-import Listenable from "./Listenable";
+import { make, Listenable } from "./Listenable";
 
 var dpr = window.devicePixelRatio;
 
-const DPRListener = new class DPRListener extends Listenable<typeof dpr> {
+const DPRListener: Listenable<number> = make(change => {
+   window.addEventListener("resize", change);
+});
+
+new class DPRListener extends Listenable<typeof dpr> {
    constructor () {
       super();
       window.addEventListener("resize", this.external.bind(this));

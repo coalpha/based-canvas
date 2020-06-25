@@ -1,4 +1,4 @@
-import Listenable from "./listenable/Listenable";
+import { Listenable } from "./Listenable";
 
 import { CSSPixels, RasterUnits } from "./pixels";
 
