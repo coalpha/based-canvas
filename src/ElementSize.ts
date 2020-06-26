@@ -1,45 +1,27 @@
 /// <reference types="./ResizeObserver"/>
-import { ChangeListener, Listenable, make } from "./Listenable";
+import { Listenable, make, Executor} from "./Listenable";
 import { CSSPixels } from "./pixels";
-import Dimension from "./Dimension";
+import { Dimension, eq } from "./Dimension";
 
 type CSSDimensions = Dimension<CSSPixels>;
 
-export default class ElementSizeListenable implements Listenable<CSSDimensions> {
-   #el: Element;
-   #observer: ResizeObserver;
-   #currentSize!: CSSDimensions;
+const makeExecutor = (el: Element) => <Executor<CSSDimensions>> ((_, changeV) => {
+   new ResizeObserver(([{ contentRect: { width, height }}]: ResizeObserverEntry[]) => {
+      changeV({
+         width: width as CSSPixels,
+         height: height as CSSPixels,
+      });
+   }).observe(el);
+});
 
-   constructor (el: Element) {
-      this.#el = el;
-      this.#observer = new ResizeObserver(this.external.bind(this));
-      this.#observer.observe(el);
-      this.fetch();
-   }
+const makeFetch = (el: Element) => (): CSSDimensions => {
+   const cssprops = window.getComputedStyle(el);
+   return ({
+      width: +cssprops.width.slice(-2) as CSSPixels,
+      height: +cssprops.height.slice(-2) as CSSPixels,
+   });
+};
 
-   fetch() {
-      const cssprops = window.getComputedStyle(this.#el);
-      this.#currentSize = {
-         width: +cssprops.width.slice(-2) as CSSPixels,
-         height: +cssprops.height.slice(-2) as CSSPixels,
-      };
-   }
-
-   external([{ contentRect: { width, height }}]: ResizeObserverEntry[]) {
-      if (this.#currentSize.width !== width || this.#currentSize.height !== height) {
-         this.#currentSize = {
-            width: width as CSSPixels,
-            height: height as CSSPixels,
-         };
-         this.#listeners.forEach(listener => listener(this.#currentSize));
-      }
-   }
-
-   get value() { return this.#currentSize };
-
-   #listeners: ChangeListener<CSSDimensions>[] = [];
-
-   addChangeListener(listener: ChangeListener<CSSDimensions>) {
-      this.#listeners.push(listener);
-   }
+export default function makeElementSizeListener(el: Element): Listenable<CSSDimensions> {
+   return make(makeExecutor(el), makeFetch(el), eq);
 }

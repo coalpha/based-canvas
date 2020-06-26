@@ -28,7 +28,9 @@ type External = () => void;
  * The first parameter is the `external` callback which should be hooked up to
  * any event listeners or providers that accept a function.
  */
-type Executor<T> = (external: External, externalV: ExternalV<T>) => void;
+export interface Executor<T> {
+   (external: External, externalV: ExternalV<T>): void;
+}
 
 type Fetch<T> = () => T;
 

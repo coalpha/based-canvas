@@ -1,8 +1,8 @@
 import { make } from "./Listenable";
 
-const DPRListener = make(
+const DPRListenable = make(
    change => window.addEventListener("resize", change),
    () => window.devicePixelRatio,
 );
 
-export default DPRListener;
+export default DPRListenable;

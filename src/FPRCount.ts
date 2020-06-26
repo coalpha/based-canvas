@@ -1,40 +1,32 @@
-import { Listenable } from "./Listenable";
+import { make, Listenable } from "./Listenable";
+import Eq from "./Eq";
 import { FPR, FPRListenable } from "./FPR";
-import ElementSizeListenable from "./ElementSize";
+import makeElementSizeListenable from "./ElementSize";
 
 interface FPRCount {
    x: number;
    y: number;
 }
 
-export default class FPRCountListenable implements Listenable<FPRCount> {
-   #elementSize: ElementSizeListenable;
-   #currentCount!: FPRCount;
+const eq: Eq<FPRCount> = (a, b) => a.x === b.x && a.y === b.y;
 
-   constructor (el: Element) {
-      this.#elementSize = new ElementSizeListenable(el);
-      this.#elementSize.addChangeListener(this.external.bind(this));
-      FPRListenable.addChangeListener(this.external.bind(this))
-   };
+export default function makeFPRCountListenable(el: Element): Listenable<FPRCount> {
+   const elementSizeListenable = makeElementSizeListenable(el);
+   return make(
+      change => {
+         elementSizeListenable.addChangeListener(change);
+         FPRListenable.addChangeListener(change);
+      },
 
-   external() {
-      
-   }
+      () => {
+         const cpx = FPRListenable.value.cpx;
+         const { width, height } = elementSizeListenable.value;
+         return ({
+            x: width / cpx | 0,
+            y: height / cpx | 0,
+         });
+      },
 
-   addChangeListener()
-
-   fetch() {
-      const cpx = FPRListenable.value.cpx;
-      const { width, height } = this.#elementSize.value;
-      const newFPRCount = {
-         x: width / cpx | 0,
-         y: height / cpx | 0,
-      };
-
-      if (newFPRCount.x !== this.#currentCount.x || newFPRCount.y !== this.#currentCount.y) {
-         
-      }
-   };
-
-   get value() { return this.#currentCount };
+      eq,
+   );
 }

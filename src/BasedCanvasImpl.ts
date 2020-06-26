@@ -1,7 +1,7 @@
 import BasedCanvas from "./BasedCanvas";
 import { CSSPixels, RasterUnits } from "./pixels";
-import Dimension from "./Dimension";
-import Listenable from "./Listenable";
+import { Dimension } from "./Dimension";
+import { Listenable } from "./Listenable";
 
 export default class BasedCanvasImpl implements BasedCanvas {
    readonly #ctx: CanvasRenderingContext2D;

@@ -2,7 +2,7 @@ import { Listenable } from "./Listenable";
 
 import { CSSPixels, RasterUnits } from "./pixels";
 
-import Dimension from "./Dimension";
+import { Dimension } from "./Dimension";
 
 export default interface BasedCanvas {
    recalc(): void;
@@ -16,4 +16,3 @@ export default interface BasedCanvas {
    readonly canvas: HTMLCanvasElement;
    readonly canvasSize: Listenable<Dimension<CSSPixels>>;
 }
-
