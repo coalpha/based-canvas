@@ -1,29 +1,5 @@
 digraph {
-   subgraph cluster_window {
-      label=window
-      w_e [label="event resize"]
-      w_s [label="state devicePixelRatio"]
-   }
-
-   subgraph cluster_zoom {
-      label=zoom
-      z_s [label="state dpr"]
-      z_u [label="onResize()"]
-      z_e [label="event change"]
-   }
-
-   w_e -> z_u
-   z_u -> z_s [arrowhead=none]
-   w_s -> z_u -> z_e
-
-   subgraph cluster_fpr {
-      label=fpr
-      fpr_s [label="state currentFPR"]
-      fpr_u [label="updateFPR()"]
-      fpr_e [label="event change"]
-   }
-
-   z_e -> fpr_u
-   fpr_u -> fpr_s [arrowhead="none"]
-   z_s -> fpr_u -> fpr_e
+   rankdir=LR
+   dpr -> fpr -> fprcount -> ctxSize
+   containerSize -> fprcount -> canvasSize
 }

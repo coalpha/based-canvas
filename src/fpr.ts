@@ -1,50 +1,49 @@
-import Listenable from "./Listenable";
-import DPRListener from "./DPR";
-import isPrettyMuchAnInteger from "./isPrettyMuchAnInteger";
-import { CSSPixels, DisplayPixels } from "./pixels";
+import { DisplayPixels, CSSPixels } from "./pixels";
+import kindaInt from "./isPrettyMuchAnInteger";
 
-type FPR = {
+interface FPR {
    readonly dpx: DisplayPixels,
    readonly cpx: CSSPixels,
 };
-
-const CSS_PIXELS_LIMIT = 100;
 
 const defaultFPR: FPR = {
    dpx: 1 as DisplayPixels,
    cpx: 1 as CSSPixels,
 };
 
-var currentFPR: FPR;
+interface FPRListener { (fpr: FPR): void }
 
-const FPRListener = new class FPRListener extends Listenable<FPR> {
-   constructor () {
-      super();
-      DPRListener.addChangeListener(super.external.bind(this));
-      this.fetch();
-   };
+const listeners: FPRListener[] = [];
 
-   fetch() {
-      const dpr = DPRListener.value;
+let lastdpr = window.devicePixelRatio;
+const CSS_PIXELS_LIMIT = 100;
+function resize() {
+   const dpr = window.devicePixelRatio;
+   if (dpr !== lastdpr) {
+      lastdpr = dpr;
       for (let co = 1; co < CSS_PIXELS_LIMIT; co++) {
-         if (isPrettyMuchAnInteger(dpr * co)) {
-            currentFPR = {
+         if (kindaInt(dpr * co)) {
+            dispatch({
                dpx: Math.round(dpr * co) as DisplayPixels,
                cpx: co as CSSPixels,
-            };
-            return;
+            });
          }
       }
-      currentFPR = defaultFPR;
-   };
-
-   /**
-    * @name FractionalPixelRatio
-    * @name FPR
-    * @see dpx / cpx
-    * @see dppx / cppx
-    */
-   get value() { return currentFPR };
+   }
+   dispatch(defaultFPR);
 }
 
-export default FPRListener;
+function dispatch(fpr: FPR) {
+   listeners.forEach(listener => listener(fpr));
+}
+
+window.addEventListener("resize", resize);
+
+const addListener = listeners.push.bind(listeners);
+
+export {
+   FPR,
+   defaultFPR,
+   FPRListener,
+   addListener,
+};
