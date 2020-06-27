@@ -1,15 +1,12 @@
+/** @typedef {import("../src/BasedCanvas").default} BasedCanvas*/
 
-import { BasedCanvas } from "../dist/lib.js";
-
-window.BasedCanvas = BasedCanvas;
 const canvasContainer = document.getElementById("canvas-container");
+
+/** @type {BasedCanvas} */
 const bc = new BasedCanvas(canvasContainer);
-/**
- * @type {CanvasRenderingContext2D}
- */
-const ctx = bc.ctx;
+
+const { ctx } = bc;
 window.bc = bc;
-window.PixelCanvas = BasedCanvas;
 
 const rainbow = [
    "#e57373", "#f06292", "#ba68c8", "#9575cd", "#7986cb",
@@ -22,11 +19,7 @@ function* rainbowIterator() {
    const len = rainbow.length;
    let i = 0;
    while (true) {
-      if (i < len) {
-         yield rainbow[i++];
-      } else {
-         i = 0;
-      }
+      yield rainbow[i++ % len];
    }
 }
 
@@ -49,14 +42,14 @@ function drawText() {
    ctx.fillText("The purple background is the <div> background", 100, 230);
    ctx.fillText("Press space to show the integerBlocks", 100, 300);
    ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
-   ctx.fillText(`There are ${BasedCanvas.fpr.dpx} display pixels (dp) for every ${BasedCanvas.fpr.cpx} css pixels.`, 100, 400);
-   ctx.fillText(`The container is ${bc.container.clientWidth}px by ${bc.container.clientHeight} aka ~${(bc.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(bc.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
-   ctx.fillText(`The context is ${bc.canvas.width}dp by ${bc.canvas.height}dp in size`, 100, 460);
+   ctx.fillText(`There are ${BasedCanvas.currentFPR.dpx} display pixels (dp) for every ${BasedCanvas.currentFPR.cpx} css pixels.`, 100, 400);
+   ctx.fillText(`The container is ${bc.containerWidth}px by ${bc.containerHeight} aka ~${(bc.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(bc.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
+   ctx.fillText(`The context is ${bc.canvasWidth}dp by ${bc.canvasHeight}dp in size`, 100, 460);
 }
 
 /** @param {CanvasRenderingContext2D} ctx */
 function drawBlocks() {
-   const size = BasedCanvas.fpr.dpx;
+   const size = BasedCanvas.currentFPR.dpx;
    ctx.strokeStyle = "cyan";
    const { fprCountX, fprCountY } = bc;
    for (let y = 0; y < fprCountY; y++) {
@@ -79,9 +72,9 @@ function paint() {
 window.addEventListener("keypress", e => {
    if (e.keyCode === 32) {
       doDrawBlocks ^= 1;
-      ctx.clearRect(0, 0, bc.canvas.width, bc.canvas.height);
+      ctx.clearRect(0, 0, bc.ctxWidth, bc.ctxHeight);
       paint();
    }
 });
 
-bc.canvasResized = paint;
+bc.addCtxResizeListener(paint);

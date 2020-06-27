@@ -4,10 +4,11 @@ const livereload = require("rollup-plugin-livereload");
 const { terser } = require("rollup-plugin-terser");
 
 const config = {
-   input: "src/lib.ts",
+   input: "src/BasedCanvas.ts",
    output: {
-      file: "dist/lib.js",
-      format: "es",
+      file: "dist/lib.iife.js",
+      format: "iife",
+      name: "BasedCanvas",
       strict: true,
       sourcemap: true,
    },

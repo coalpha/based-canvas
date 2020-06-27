@@ -1,5 +1,5 @@
 import Runnable from "./Runnable";
-import { CSSPixels, RasterUnits } from "./pixels";
+import { RasterUnits, CSSPixels } from "./pixels";
 
 export default interface IBasedCanvas {
    fetch(): void;
