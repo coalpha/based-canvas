@@ -1,5 +1,4 @@
 digraph {
-   rankdir=LR
    dpr -> fpr -> fprcount -> ctxSize
    containerSize -> fprcount -> canvasSize
 }

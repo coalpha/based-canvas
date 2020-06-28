@@ -3,6 +3,12 @@ import IBasedCanvas from "./IBasedCanvas";
 import { RasterUnits, DisplayPixels, CSSPixels } from "./pixels";
 import { currentFPR, addListener } from "./FPR";
 
+interface BasedCanvasOptions extends CanvasRenderingContext2DSettings{
+   overflow: boolean;
+}
+
+const defaultBasedCanvasOptions = { alpha: false } as BasedCanvasOptions;
+
 export default class BasedCanvas implements IBasedCanvas {
    static currentFPR = currentFPR;
    static addFPRListener = addListener;
@@ -28,14 +34,16 @@ export default class BasedCanvas implements IBasedCanvas {
    get containerWidth() { return this.#containerWidth }
    get containerHeight() { return this.#containerHeight }
 
+   readonly #fprOverflow: boolean;
    #fprCountX!: number;
    #fprCountY!: number;
    get fprCountX() { return this.#fprCountX }
    get fprCountY() { return this.#fprCountY }
 
-   constructor (container: HTMLElement, alpha = false) {
+   constructor (container: HTMLElement, maybeOptions?: BasedCanvasOptions) {
+      const options = Object.assign(defaultBasedCanvasOptions, maybeOptions);
       const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d", { alpha });
+      const ctx = canvas.getContext("2d", options);
       if (ctx == null) {
          throw new Error('HTMLElement.getContext("2d") returned null!');
       }
@@ -49,11 +57,11 @@ export default class BasedCanvas implements IBasedCanvas {
       this.#ctx = ctx;
       this.#canvas = canvas;
       this.#container = container;
+      this.#fprOverflow = !!options.overflow;
+      this.fetch();
    }
 
-   private lfprChanged() {
-      this.recalc();
-   }
+   private lfprChanged = this.recalc;
 
    private lcontainerResized([{contentRect: { width, height }}]: ResizeObserverEntry[]) {
       this.#containerWidth = width as CSSPixels;
@@ -73,55 +81,57 @@ export default class BasedCanvas implements IBasedCanvas {
       const containerProps = window.getComputedStyle(this.#container);
       this.#containerWidth = +containerProps.width.slice(-2) as CSSPixels;
       this.#containerHeight = +containerProps.height.slice(-2) as CSSPixels;
-
-      this.recalc();
    }
 
    recalc() {
       const { dpx, cpx } = currentFPR;
 
-      const fprCX = this.#containerWidth / cpx | 0;
-      const fprCY = this.#containerHeight / cpx | 0;
+      const toInt = this.#fprOverflow ? Math.ceil : Math.floor;
+
+      const fprCX = toInt(this.#containerWidth / cpx);
+      const fprCY = toInt(this.#containerHeight / cpx);
       this.#fprCountX = fprCX;
       this.#fprCountY  = fprCY;
 
       const newCtxWidth = fprCX * dpx as DisplayPixels;
       const newCtxHeight = fprCY * dpx as DisplayPixels;
 
-      if (
+      const ctxSizeChanged = (
          (newCtxWidth !== this.#ctxWidth)
          ||
          (newCtxHeight !== this.#ctxHeight)
-      ) {
-         this.setCtxSize(newCtxWidth, newCtxHeight);
-         this.#ctxWidth = newCtxWidth;
-         this.#ctxHeight = newCtxHeight;
-      }
+      );
 
       const newCanvasWidth = fprCX * cpx as CSSPixels;
       const newCanvasHeight = fprCY * cpx as CSSPixels;
 
-      if (
+      const canvasSizeChanged = (
          (newCanvasWidth !== this.#canvasWidth)
          ||
          (newCanvasHeight !== this.#canvasHeight)
-      ) {
-         this.setCanvasSize(newCanvasWidth, newCanvasHeight);
+      );
+
+      if (ctxSizeChanged) {
+         this.#canvas.width = newCtxWidth;
+         this.#canvas.height = newCtxHeight;
+         this.#ctxWidth = newCtxWidth;
+         this.#ctxHeight = newCtxHeight;
+      }
+
+      if (canvasSizeChanged) {
+         this.#canvas.style.width = `${newCanvasWidth}px`;
+         this.#canvas.style.height = `${newCanvasHeight}px`;
          this.#canvasWidth = newCanvasWidth;
          this.#canvasHeight = newCanvasHeight;
       }
-   }
 
-   private setCanvasSize(width: CSSPixels, height: CSSPixels) {
-      this.#canvas.style.width = `${width}px`;
-      this.#canvas.style.height = `${height}px`;
-      this.callCanvasListeners();
-   }
+      if (ctxSizeChanged) {
+         this.callCtxListeners();
+      }
 
-   private setCtxSize(width: RasterUnits, height: RasterUnits) {
-      this.#canvas.width = this.#ctxWidth = width;
-      this.#canvas.height = this.#ctxHeight = height;
-      this.callCtxListeners();
+      if (canvasSizeChanged) {
+         this.callCanvasListeners();
+      }
    }
 
    #ctxListeners: Runnable[] = [];

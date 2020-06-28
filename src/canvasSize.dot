@@ -1,0 +1,8 @@
+digraph {
+   0 [label="yes"]
+   newCanvasSize -> "different?"
+   "this#canvasSize" -> "different?" -> 0
+   "this#canvasSize" -> listeners
+   0 -> listeners
+   newCanvasSize -> 0 -> "<canvas>.style.size"
+}

@@ -1,9 +1,7 @@
-/** @typedef {import("../src/BasedCanvas").default} BasedCanvas*/
-
 const canvasContainer = document.getElementById("canvas-container");
 
 /** @type {BasedCanvas} */
-const bc = new BasedCanvas(canvasContainer);
+const bc = new BasedCanvas(canvasContainer, { overflow: true });
 
 const { ctx } = bc;
 window.bc = bc;
@@ -35,16 +33,32 @@ function drawColoredPixelSquares() {
    }
 }
 
+const left = 30;
+const topp = 60;
+
+function drawTextBlock(block) {
+   block.split("\n").forEach((line, idx) => {
+      ctx.fillText(line, left, topp + idx * 20);
+   });
+}
+
 function drawText() {
    ctx.font = "18px Consolas";
    ctx.fillStyle = "white";
    ctx.textBaseline = "top";
-   ctx.fillText("The purple background is the <div> background", 100, 230);
-   ctx.fillText("Press space to show the integerBlocks", 100, 300);
-   ctx.fillText("Try zooming the browser to see that the canvas stays crisp", 100, 330);
-   ctx.fillText(`There are ${BasedCanvas.currentFPR.dpx} display pixels (dp) for every ${BasedCanvas.currentFPR.cpx} css pixels.`, 100, 400);
-   ctx.fillText(`The container is ${bc.containerWidth}px by ${bc.containerHeight} aka ~${(bc.container.clientWidth * window.devicePixelRatio).toFixed(2)}dp by ~${(bc.container.clientHeight * window.devicePixelRatio).toFixed(2)}dp`, 100, 430);
-   ctx.fillText(`The context is ${bc.canvasWidth}dp by ${bc.canvasHeight}dp in size`, 100, 460);
+   drawTextBlock(`
+      The purple background is the <div> background.
+      Go ahead and try to resize the div.
+      Adjust the browser zoom to see that the image stays crisp.
+      Stats:
+
+      dpr = ${window.devicePixelRatio}
+      fpr = ${BasedCanvas.currentFPR.dpx}dpx / ${BasedCanvas.currentFPR.cpx}cpx
+      
+      ctx[${bc.ctxHeight}ru, ${bc.ctxWidth}ru]
+      container[${bc.containerWidth}cpx, ${bc.containerHeight}cpx]
+      canvas[${bc.canvasWidth}cpx, ${bc.canvasHeight}cpx]
+   `);
 }
 
 /** @param {CanvasRenderingContext2D} ctx */
@@ -62,6 +76,7 @@ function drawBlocks() {
 let doDrawBlocks = false;
 
 function paint() {
+   console.warn(new Error("paint"));
    drawColoredPixelSquares();
    drawText();
    if (doDrawBlocks) {
