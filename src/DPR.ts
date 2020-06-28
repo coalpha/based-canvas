@@ -8,6 +8,7 @@ function updateDPR() {
    const newdpr = window.devicePixelRatio;
    if (lastdpr !== newdpr) {
       listeners.forEach(ru => ru());
+      lastdpr = newdpr;
    }
 }
 

@@ -76,7 +76,6 @@ function drawBlocks() {
 let doDrawBlocks = false;
 
 function paint() {
-   console.warn(new Error("paint"));
    drawColoredPixelSquares();
    drawText();
    if (doDrawBlocks) {

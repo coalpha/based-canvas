@@ -61,7 +61,9 @@ export default class BasedCanvas implements IBasedCanvas {
       this.fetch();
    }
 
-   private lfprChanged = this.recalc;
+   private lfprChanged() {
+      this.recalc();
+   };
 
    private lcontainerResized([{contentRect: { width, height }}]: ResizeObserverEntry[]) {
       this.#containerWidth = width as CSSPixels;
@@ -137,14 +139,32 @@ export default class BasedCanvas implements IBasedCanvas {
    #ctxListeners: Runnable[] = [];
    // it's times like this that make you want the function bind syntax
    addCtxResizeListener = this.#ctxListeners.push.bind(this.#ctxListeners);
+   #callCtxListenersNextFrame = false;
    private callCtxListeners() {
+      if (this.#callCtxListenersNextFrame === false) {
+         window.requestAnimationFrame(this.actuallyCallCtxListeners.bind(this));
+         this.#callCanvasListenersNextFrame = true;
+      }
+   }
+
+   private actuallyCallCtxListeners() {
       this.#ctxListeners.forEach(ru => ru());
+      this.#callCtxListenersNextFrame === false;
    }
 
    #canvasListeners: Runnable[] = [];
    addCanvasResizeListener = this.#canvasListeners.push.bind(this.#canvasListeners);
+   #callCanvasListenersNextFrame = false;
    private callCanvasListeners() {
+      if (this.#callCanvasListenersNextFrame === false) {
+         window.requestAnimationFrame(this.actuallyCallCanvasListeners.bind(this));
+         this.#callCanvasListenersNextFrame = true;
+      }
+   }
+
+   private actuallyCallCanvasListeners() {
       this.#canvasListeners.forEach(ru => ru());
+      this.#callCanvasListenersNextFrame = false;
    }
 
    #containerListeners: Runnable[] = [];

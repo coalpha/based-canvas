@@ -1,7 +1,8 @@
 {
    "scripts": {
       "start": "rollup -c -w",
-      "build": "rollup -c"
+      "build": "rollup -c",
+      "commit": "npm run build && git add . && git commit"
    },
    "dependencies": {
       "browser-zoom-listener": "^1.1.0"
