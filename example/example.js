@@ -1,7 +1,7 @@
 const canvasContainer = document.getElementById("canvas-container");
 
 /** @type {BasedCanvas} */
-const bc = new BasedCanvas(canvasContainer, { overflow: true });
+const bc = new BasedCanvas(canvasContainer);
 
 const { ctx } = bc;
 window.bc = bc;
@@ -50,7 +50,7 @@ function drawText() {
       The purple background is the <div> background.
       Go ahead and try to resize the div.
       Adjust the browser zoom to see that the image stays crisp.
-      Stats:
+      Press space to see the Fractional Pixel Ratio as a grid.
 
       dpr = ${window.devicePixelRatio}
       fpr = ${BasedCanvas.currentFPR.dpx}dpx / ${BasedCanvas.currentFPR.cpx}cpx
